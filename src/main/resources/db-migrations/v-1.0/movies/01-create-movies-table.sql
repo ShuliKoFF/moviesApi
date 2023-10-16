@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS movies (
+  id BIGSERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL UNIQUE,
+  poster_path VARCHAR(255)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS movies
+  OWNER TO postgres;
