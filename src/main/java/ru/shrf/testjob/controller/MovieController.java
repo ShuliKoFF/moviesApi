@@ -2,11 +2,9 @@ package ru.shrf.testjob.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import ru.shrf.testjob.entity.Movie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import ru.shrf.testjob.dto.MovieResponseDTO;
 import ru.shrf.testjob.services.MovieService;
 
 @RestController
@@ -15,10 +13,11 @@ import ru.shrf.testjob.services.MovieService;
 public class MovieController {
     private final MovieService movieService;
 
-    @GetMapping
-    public Page<Movie> getAllMoviesWithPagination(
+    @GetMapping("/all_pagination")
+    public ResponseEntity<Page<MovieResponseDTO>> getAllMoviesWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size) {
-        return movieService.getAllMoviesWithPagination(page, size);
+        Page<MovieResponseDTO> movieResponseDTO = movieService.getAllMoviesWithPagination(page, size);
+        return ResponseEntity.ok(movieResponseDTO);
     }
 }

@@ -1,13 +1,14 @@
 package ru.shrf.testjob.controller;
 
 
+import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.shrf.testjob.dto.MovieResponseDTO;
 import ru.shrf.testjob.dto.UserProfileResponseDTO;
 import ru.shrf.testjob.dto.UserRegistrationRequestDTO;
 import ru.shrf.testjob.dto.UserUpdateRequestDTO;
-import ru.shrf.testjob.entity.Movie;
 import ru.shrf.testjob.services.MovieService;
 import ru.shrf.testjob.services.UserService;
 
@@ -64,17 +65,14 @@ public class UserController {
     }
 
     @GetMapping("/not_in_favorites")
-    public ResponseEntity<List<Movie>> getMoviesNotInFavorites(
+    public ResponseEntity<List<MovieResponseDTO>> getMoviesNotInFavorites(
             @RequestHeader("User-Id") Long userId,
+            @ApiParam(value = "Enter 'sql' or 'inMemory'")
             @RequestParam String loaderType
     ) {
-        List<Movie> moviesNotInFavorites;
+        List<MovieResponseDTO> moviesNotInFavorites;
         moviesNotInFavorites = movieService.getMoviesNotInFavorites(userId, loaderType);
         return ResponseEntity.ok(moviesNotInFavorites);
     }
 
-    @GetMapping("/movie")
-    public void collectMovies() {
-        movieService.collectMoviesFromDiscover();
-    }
 }

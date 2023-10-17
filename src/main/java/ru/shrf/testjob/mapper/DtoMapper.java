@@ -6,8 +6,6 @@ import ru.shrf.testjob.dto.UserRegistrationRequestDTO;
 import ru.shrf.testjob.entity.Movie;
 import ru.shrf.testjob.entity.User;
 
-
-
 public interface DtoMapper {
 
     UserRegistrationRequestDTO toUserRegistrationRequestDTO(User user);

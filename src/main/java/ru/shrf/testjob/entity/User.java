@@ -4,9 +4,6 @@ package ru.shrf.testjob.entity;
 import lombok.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,13 +22,9 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    @NotNull
-    @Email(message = "Invalid email format")
     private String email;
 
     @Column(nullable = false, unique = true)
-    @NotNull
-    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Username can only contain Latin characters and numbers")
     private String username;
 
     private String name;

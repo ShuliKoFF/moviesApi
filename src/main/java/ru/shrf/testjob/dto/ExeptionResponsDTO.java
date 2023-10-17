@@ -8,7 +8,6 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 
-
 public class ExeptionResponsDTO {
     private final String error;
     private final String message;

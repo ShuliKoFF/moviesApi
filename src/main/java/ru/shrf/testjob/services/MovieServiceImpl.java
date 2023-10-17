@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import retrofit2.Call;
 import retrofit2.Response;
 import ru.shrf.testjob.dto.DiscoverResponseDTO;
@@ -14,6 +15,7 @@ import ru.shrf.testjob.entity.Movie;
 import ru.shrf.testjob.entity.User;
 import ru.shrf.testjob.exeption.BusinessException;
 import ru.shrf.testjob.exeption.NotFoundException;
+import ru.shrf.testjob.mapper.DtoMapper;
 import ru.shrf.testjob.repository.MovieRepository;
 import ru.shrf.testjob.repository.UserRepository;
 
@@ -29,9 +31,7 @@ import java.util.stream.Collectors;
 public class MovieServiceImpl implements MovieService {
 
     @Value(value = "${api_key}")
-    private String API_KEY;
-    @Value(value = "${themoviedb_URL}")
-    private String URL;
+    private String apiKey;
     @Value(value = "${num_pages_to_collect}")
     private int NUM_PAGES_TO_COLLECT;
 
@@ -40,27 +40,29 @@ public class MovieServiceImpl implements MovieService {
     private final MovieApi movieApi;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
+    private final DtoMapper dtoMapper;
 
-    public MovieServiceImpl(MovieApi movieApi, MovieRepository movieRepository, UserRepository userRepository) {
+    public MovieServiceImpl(MovieApi movieApi, MovieRepository movieRepository, UserRepository userRepository, DtoMapper dtoMapper) {
         this.movieApi = movieApi;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
         existingMovies = new HashSet<>(movieRepository.findAll());
+        this.dtoMapper = dtoMapper;
     }
 
+    @Override
+    @Transactional
     public void collectMoviesFromDiscover() {
 
         for (int page = 1; page <= NUM_PAGES_TO_COLLECT; page++) {
-            Call<DiscoverResponseDTO> call = movieApi.getMoviesFromDiscover(API_KEY, page);
+            Call<DiscoverResponseDTO> call = movieApi.getMoviesFromDiscover(apiKey, page);
             try {
                 Response<DiscoverResponseDTO> response = call.execute();
                 if (response.isSuccessful() && response.body() != null) {
                     DiscoverResponseDTO discoverResponse = response.body();
                     List<MovieResponseDTO> movies = discoverResponse.getResults();
                     movies.forEach(dto -> {
-                        Movie movie = new Movie();
-                        movie.setTitle(dto.getTitle());
-                        movie.setPosterPath(dto.getPosterPath());
+                        Movie movie = dtoMapper.toMovie(dto);
                         if (!existingMovies.contains(movie)) {
                             movieRepository.save(movie);
                             existingMovies.add(movie);
@@ -75,13 +77,16 @@ public class MovieServiceImpl implements MovieService {
         }
     }
 
-    public Page<Movie> getAllMoviesWithPagination(int page, int size) {
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MovieResponseDTO> getAllMoviesWithPagination(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return movieRepository.findAll(pageable);
+        return movieRepository.findAll(pageable).map(dtoMapper::toMovieResponseDTO);
     }
 
     @Override
-    public List<Movie> getMoviesNotInFavorites(Long userId, String loaderType) {
+    @Transactional(readOnly = true)
+    public List<MovieResponseDTO> getMoviesNotInFavorites(Long userId, String loaderType) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         if (loaderType.equals("sql")) {
@@ -93,14 +98,17 @@ public class MovieServiceImpl implements MovieService {
         }
     }
 
-    private List<Movie> getMoviesNotInFavoritesUsingSql(User user) {
-        return movieRepository.findByUsersNotContaining(user);
+    private List<MovieResponseDTO> getMoviesNotInFavoritesUsingSql(User user) {
+        return movieRepository.findByUsersNotContaining(user).stream()
+                .map(dtoMapper::toMovieResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    private List<Movie> getMoviesNotInFavoritesInMemory(User user) {
+    private List<MovieResponseDTO> getMoviesNotInFavoritesInMemory(User user) {
         Set<Movie> favoriteMovies = user.getFavoriteMovies();
         return existingMovies.stream()
                 .filter((movie) -> !favoriteMovies.contains(movie))
+                .map(dtoMapper::toMovieResponseDTO)
                 .collect(Collectors.toList());
     }
 }

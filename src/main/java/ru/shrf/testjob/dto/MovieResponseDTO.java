@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MovieResponseDTO {
-    @SerializedName("title")
     private String title;
 
     @SerializedName("poster_path")

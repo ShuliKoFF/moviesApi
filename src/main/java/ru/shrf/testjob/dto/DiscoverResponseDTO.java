@@ -13,7 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DiscoverResponseDTO {
-    @SerializedName("page")
     private int page;
 
     @SerializedName("results")
